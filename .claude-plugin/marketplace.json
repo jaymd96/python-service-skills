@@ -1,0 +1,368 @@
+{
+  "name": "python-service-skills",
+  "owner": { "name": "James" },
+  "description": "Python service development skills — Witchcraft ecosystem, data libraries, HTTP, observability, CLI, resilience, and more",
+  "metadata": { "version": "1.0.0" },
+  "plugins": [
+    {
+      "name": "apollo-clone",
+      "source": "./apollo-clone",
+      "description": "Continuous delivery platform on k3s with Product Catalog, Entity lifecycle, OrchestrationEngine, and SpokeAgent deployment",
+      "version": "1.0.0",
+      "keywords": ["apollo", "cd-platform", "deployment", "orchestration"],
+      "category": "platform"
+    },
+    {
+      "name": "attrs",
+      "source": "./attrs",
+      "description": "Python classes without boilerplate using attrs",
+      "version": "1.0.0",
+      "keywords": ["attrs", "data-classes", "validation"],
+      "category": "data-modeling"
+    },
+    {
+      "name": "blinker",
+      "source": "./blinker",
+      "description": "Fast signal/event dispatching for Python (observer pattern)",
+      "version": "1.0.0",
+      "keywords": ["blinker", "signals", "events", "pub-sub"],
+      "category": "architecture"
+    },
+    {
+      "name": "burr",
+      "source": "./burr",
+      "description": "State machine framework for AI agent workflows with persistence and tracking UI",
+      "version": "1.0.0",
+      "keywords": ["burr", "state-machine", "ai-agents", "workflows"],
+      "category": "ai-agents"
+    },
+    {
+      "name": "casbin",
+      "source": "./casbin",
+      "description": "Policy-based authorization supporting ACL, RBAC, and ABAC models",
+      "version": "1.0.0",
+      "keywords": ["casbin", "authorization", "rbac", "access-control"],
+      "category": "security"
+    },
+    {
+      "name": "cattrs",
+      "source": "./cattrs",
+      "description": "Composable converters for structuring and unstructuring data with cattrs",
+      "version": "1.0.0",
+      "keywords": ["cattrs", "serialization", "structuring", "converters"],
+      "category": "data-serialization"
+    },
+    {
+      "name": "cherry",
+      "source": "./cherry",
+      "description": "Opinionated Python server framework (Witchcraft port) with structured logging, health checks, and tracing",
+      "version": "1.0.0",
+      "keywords": ["cherry", "witchcraft", "server-framework", "middleware"],
+      "category": "witchcraft"
+    },
+    {
+      "name": "citadel",
+      "source": "./citadel",
+      "description": "Lightweight K3s platform with zero-trust networking and ephemeral nodes",
+      "version": "1.0.0",
+      "keywords": ["citadel", "k3s", "cilium", "zero-trust"],
+      "category": "platform"
+    },
+    {
+      "name": "click",
+      "source": "./click",
+      "description": "Composable command-line interface framework",
+      "version": "1.0.0",
+      "keywords": ["click", "cli", "command-line", "arguments"],
+      "category": "cli"
+    },
+    {
+      "name": "croniter",
+      "source": "./croniter",
+      "description": "Cron expression parser and datetime iterator",
+      "version": "1.0.0",
+      "keywords": ["cron", "scheduling", "croniter", "datetime"],
+      "category": "datetime"
+    },
+    {
+      "name": "datetimerange",
+      "source": "./datetimerange",
+      "description": "Datetime range operations including intersection, union, containment, and iteration",
+      "version": "1.0.0",
+      "keywords": ["datetime-range", "time-intervals", "scheduling"],
+      "category": "datetime"
+    },
+    {
+      "name": "deepdiff",
+      "source": "./deepdiff",
+      "description": "Deep comparison and diffing of Python objects",
+      "version": "1.0.0",
+      "keywords": ["deepdiff", "comparison", "diff", "delta-patch"],
+      "category": "data-utilities"
+    },
+    {
+      "name": "docker-generator",
+      "source": "./docker-generator",
+      "description": "Pure Python Dockerfile generation library with DockerfileBuilder fluent API",
+      "version": "1.0.0",
+      "keywords": ["docker", "dockerfile", "code-generation", "containers"],
+      "category": "deployment"
+    },
+    {
+      "name": "dynaconf",
+      "source": "./dynaconf",
+      "description": "Layered configuration management with multi-format and environment support",
+      "version": "1.0.0",
+      "keywords": ["dynaconf", "configuration", "settings", "twelve-factor"],
+      "category": "configuration"
+    },
+    {
+      "name": "enchant",
+      "source": "./enchant",
+      "description": "Type-safe API contract code generation from .enchant.yml DSL to attrs models, server stubs, and httpx clients",
+      "version": "1.0.0",
+      "keywords": ["enchant", "code-generation", "api-contracts", "dsl"],
+      "category": "witchcraft"
+    },
+    {
+      "name": "forge-pipeline",
+      "source": "./forge-pipeline",
+      "description": "Workflow for packaging, containerizing, and publishing Python services using Forge tools",
+      "version": "1.0.0",
+      "keywords": ["forge", "pipeline", "packaging", "deployment"],
+      "category": "deployment"
+    },
+    {
+      "name": "httpx",
+      "source": "./httpx",
+      "description": "Modern HTTP client for Python with sync and async support",
+      "version": "1.0.0",
+      "keywords": ["httpx", "http-client", "async", "rest"],
+      "category": "http"
+    },
+    {
+      "name": "immutables",
+      "source": "./immutables",
+      "description": "High-performance immutable mapping (HAMT) for Python",
+      "version": "1.0.0",
+      "keywords": ["immutables", "hamt", "persistent-data-structures"],
+      "category": "data-structures"
+    },
+    {
+      "name": "jinja2",
+      "source": "./jinja2",
+      "description": "Fast template engine with inheritance, macros, and sandboxed execution",
+      "version": "1.0.0",
+      "keywords": ["jinja2", "templates", "rendering", "code-generation"],
+      "category": "templating"
+    },
+    {
+      "name": "lark",
+      "source": "./lark",
+      "description": "Modern parsing library with grammar-as-data design for building parsers and DSLs",
+      "version": "1.0.0",
+      "keywords": ["lark", "parsing", "grammar", "dsl", "ebnf"],
+      "category": "parsing"
+    },
+    {
+      "name": "networkx",
+      "source": "./networkx",
+      "description": "Graph and network analysis with DAGs, topological sorting, and graph algorithms",
+      "version": "1.0.0",
+      "keywords": ["networkx", "graphs", "dag", "topological-sort"],
+      "category": "data-structures"
+    },
+    {
+      "name": "opentelemetry",
+      "source": "./opentelemetry",
+      "description": "Vendor-neutral distributed tracing, metrics, and observability",
+      "version": "1.0.0",
+      "keywords": ["opentelemetry", "tracing", "metrics", "observability"],
+      "category": "observability"
+    },
+    {
+      "name": "orjson",
+      "source": "./orjson",
+      "description": "Fast JSON serialization in Rust with native datetime/numpy/dataclass support",
+      "version": "1.0.0",
+      "keywords": ["orjson", "json", "serialization", "performance"],
+      "category": "data-serialization"
+    },
+    {
+      "name": "pendulum",
+      "source": "./pendulum",
+      "description": "Timezone-aware datetime replacement with immutable, fluent API",
+      "version": "1.0.0",
+      "keywords": ["pendulum", "datetime", "timezone", "date-arithmetic"],
+      "category": "datetime"
+    },
+    {
+      "name": "platform-deploy",
+      "source": "./platform-deploy",
+      "description": "Workflow for deploying and operating services on the Apollo CD platform running on Citadel K3s clusters",
+      "version": "1.0.0",
+      "keywords": ["deployment", "apollo", "citadel", "operations"],
+      "category": "platform"
+    },
+    {
+      "name": "pluggy",
+      "source": "./pluggy",
+      "description": "Hook-based plugin system, battle-tested in pytest",
+      "version": "1.0.0",
+      "keywords": ["pluggy", "plugins", "hooks", "extensibility"],
+      "category": "architecture"
+    },
+    {
+      "name": "punq",
+      "source": "./punq",
+      "description": "Minimal dependency injection container for Python",
+      "version": "1.0.0",
+      "keywords": ["punq", "dependency-injection", "ioc", "di-container"],
+      "category": "architecture"
+    },
+    {
+      "name": "python-dateutil",
+      "source": "./python-dateutil",
+      "description": "Powerful datetime extensions with flexible parsing and relative deltas",
+      "version": "1.0.0",
+      "keywords": ["dateutil", "date-parsing", "relativedelta", "rrule"],
+      "category": "datetime"
+    },
+    {
+      "name": "pyyaml",
+      "source": "./pyyaml",
+      "description": "YAML parser and emitter for Python",
+      "version": "1.0.0",
+      "keywords": ["pyyaml", "yaml", "configuration", "parsing"],
+      "category": "data-serialization"
+    },
+    {
+      "name": "release-hub",
+      "source": "./release-hub",
+      "description": "Apollo Hub publishing client with version detection and release channel mapping",
+      "version": "1.0.0",
+      "keywords": ["release-hub", "publishing", "versioning", "apollo-hub"],
+      "category": "deployment"
+    },
+    {
+      "name": "returns",
+      "source": "./returns",
+      "description": "Typed, composable error handling with Result, Maybe, and IO containers",
+      "version": "1.0.0",
+      "keywords": ["returns", "result-type", "maybe", "monads"],
+      "category": "functional-programming"
+    },
+    {
+      "name": "rich",
+      "source": "./rich",
+      "description": "Rich text and beautiful formatting for the terminal",
+      "version": "1.0.0",
+      "keywords": ["rich", "terminal", "formatting", "progress-bars"],
+      "category": "cli"
+    },
+    {
+      "name": "rule-engine",
+      "source": "./rule-engine",
+      "description": "Safe business rule evaluation with Python-like expression syntax",
+      "version": "1.0.0",
+      "keywords": ["rule-engine", "business-rules", "expressions", "filtering"],
+      "category": "logic"
+    },
+    {
+      "name": "rune",
+      "source": "./rune",
+      "description": "Composable validation and serialization built on attrs/cattrs with constraints, aliases, and JSON Schema",
+      "version": "1.0.0",
+      "keywords": ["rune", "validation", "serialization", "constraints"],
+      "category": "witchcraft"
+    },
+    {
+      "name": "semantic-version",
+      "source": "./semantic-version",
+      "description": "Semantic versioning (SemVer 2.0.0) parsing, comparison, and range matching",
+      "version": "1.0.0",
+      "keywords": ["semver", "versioning", "version-comparison"],
+      "category": "data-utilities"
+    },
+    {
+      "name": "service-launcher",
+      "source": "./service-launcher",
+      "description": "Go binary for running Python services in containers with memory management and readiness probes",
+      "version": "1.0.0",
+      "keywords": ["service-launcher", "containers", "process-manager"],
+      "category": "deployment"
+    },
+    {
+      "name": "sls-distribution",
+      "source": "./sls-distribution",
+      "description": "Pants plugin for packaging Python services as SLS distributions",
+      "version": "1.0.0",
+      "keywords": ["sls", "pants", "packaging", "distribution"],
+      "category": "deployment"
+    },
+    {
+      "name": "sqlalchemy",
+      "source": "./sqlalchemy",
+      "description": "SQLAlchemy 2.0 ORM and SQL toolkit for database models and queries",
+      "version": "1.0.0",
+      "keywords": ["sqlalchemy", "orm", "database", "sql"],
+      "category": "database"
+    },
+    {
+      "name": "structlog",
+      "source": "./structlog",
+      "description": "Structured logging with processor pipelines and context binding",
+      "version": "1.0.0",
+      "keywords": ["structlog", "logging", "structured-logging", "json-logs"],
+      "category": "observability"
+    },
+    {
+      "name": "tenacity",
+      "source": "./tenacity",
+      "description": "Composable retry logic for Python with backoff and stop conditions",
+      "version": "1.0.0",
+      "keywords": ["tenacity", "retry", "backoff", "resilience"],
+      "category": "resilience"
+    },
+    {
+      "name": "toolz",
+      "source": "./toolz",
+      "description": "Functional programming primitives — pipe, curry, compose, and data transformations",
+      "version": "1.0.0",
+      "keywords": ["toolz", "functional-programming", "pipe", "curry"],
+      "category": "functional-programming"
+    },
+    {
+      "name": "transitions",
+      "source": "./transitions",
+      "description": "Lightweight finite state machine (FSM) library with hierarchical and async support",
+      "version": "1.0.0",
+      "keywords": ["transitions", "fsm", "state-machine", "workflows"],
+      "category": "architecture"
+    },
+    {
+      "name": "transmute",
+      "source": "./transmute",
+      "description": "Zero-downtime online schema migration framework with 8-state lifecycle and dual-write routing",
+      "version": "1.0.0",
+      "keywords": ["transmute", "migrations", "schema-evolution", "dual-write"],
+      "category": "witchcraft"
+    },
+    {
+      "name": "typer",
+      "source": "./typer",
+      "description": "CLI builder using Python type hints, built on Click",
+      "version": "1.0.0",
+      "keywords": ["typer", "cli", "type-hints", "command-line"],
+      "category": "cli"
+    },
+    {
+      "name": "witchcraft-service",
+      "source": "./witchcraft-service",
+      "description": "Workflow for building production Python services using the Witchcraft stack (Enchant + Cherry + Rune + Transmute)",
+      "version": "1.0.0",
+      "keywords": ["witchcraft", "service-workflow", "api-contracts", "full-stack"],
+      "category": "witchcraft"
+    }
+  ]
+}

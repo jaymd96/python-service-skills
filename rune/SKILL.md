@@ -67,6 +67,7 @@ user = c.structure(data, User)    # dict -> validated instance
 
 ## References
 
+- **[overview.md](references/overview.md)** — Full Rune framework overview, API quick reference, Apollo integration examples, best practices
 - **[api.md](references/api.md)** — @inscribed, field(), constraints, validators, Converter, TypeRegistry, CoercionRegistry
 - **[serialization.md](references/serialization.md)** — Converter modes, aliases, computed fields, discriminated unions, JSON Schema
 - **[examples.md](references/examples.md)** — Complete examples, integration patterns, gotchas

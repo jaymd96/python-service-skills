@@ -58,6 +58,7 @@ runner.run_until_idle()
 
 ## References
 
+- **[overview.md](references/overview.md)** — Full Transmute framework overview, architecture, API quick reference, Apollo integration examples
 - **[api.md](references/api.md)** — Migration, MigrationMeta, MigrationRunner, MigrationGraph, Storage, Proxy, Signals
 - **[lifecycle.md](references/lifecycle.md)** — 8-state FSM, dual-write routing, soak times, finalization, rollback, DLQ, audit
 - **[examples.md](references/examples.md)** — Complete migration examples, runner factory, CLI reference, gotchas

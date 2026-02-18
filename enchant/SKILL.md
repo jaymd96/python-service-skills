@@ -62,6 +62,7 @@ user = client.get_user(user_id=42)
 
 ## References
 
+- **[overview.md](references/overview.md)** — Full Enchant framework overview, product breakdown, DSL reference, Apollo integration examples
 - **[dsl.md](references/dsl.md)** — .enchant.yml type system, validation keywords, safety annotations, services, errors
 - **[codegen.md](references/codegen.md)** — gen-models, gen-server, gen-client output formats, enchant-verify, enchant-cli
 - **[dialogue.md](references/dialogue.md)** — EnchantChannel, AIMD concurrency, retry policy, node selection, ChannelConfig

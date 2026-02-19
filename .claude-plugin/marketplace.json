@@ -45,6 +45,14 @@
       "category": "security"
     },
     {
+      "name": "changelog",
+      "source": "./changelog",
+      "description": "Maintain a human-readable changelog following Keep a Changelog and Semantic Versioning",
+      "version": "1.0.0",
+      "keywords": ["changelog", "semver", "release-notes", "versioning"],
+      "category": "workflow"
+    },
+    {
       "name": "cattrs",
       "source": "./cattrs",
       "description": "Composable converters for structuring and unstructuring data with cattrs",

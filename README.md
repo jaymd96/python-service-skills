@@ -1,6 +1,6 @@
 # python-service-skills
 
-A Claude Code plugin providing 45 Python ecosystem skills for service development — covering the Witchcraft stack, data libraries, HTTP, observability, CLI tooling, resilience, and more.
+A Claude Code plugin providing 46 Python ecosystem skills for service development — covering the Witchcraft stack, data libraries, HTTP, observability, CLI tooling, resilience, and more.
 
 ## Usage
 
@@ -118,6 +118,12 @@ Each skill provides a `SKILL.md` with quick-start patterns and a `references/` d
 | [semantic-version](./semantic-version) | SemVer parsing, comparison, and range matching |
 | [burr](./burr) | State machine framework for AI agent workflows |
 
+### Workflow & Conventions
+
+| Skill | Description |
+|-------|-------------|
+| [changelog](./changelog) | Maintain a changelog following Keep a Changelog and Semantic Versioning |
+
 ### Platform & Deployment
 
 | Skill | Description |
@@ -136,7 +142,7 @@ Each skill provides a `SKILL.md` with quick-start patterns and a `references/` d
 ```
 python-service-skills/
 ├── .claude-plugin/
-│   └── marketplace.json    # Plugin manifest (45 skills)
+│   └── marketplace.json    # Plugin manifest (46 skills)
 ├── attrs/
 │   ├── SKILL.md            # Quick-start patterns and trigger keywords
 │   └── references/
@@ -146,7 +152,7 @@ python-service-skills/
 │   ├── SKILL.md
 │   └── references/
 │       └── ...
-└── ... (45 skill directories)
+└── ... (46 skill directories)
 ```
 
 ## License

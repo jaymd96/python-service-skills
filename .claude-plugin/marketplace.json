@@ -133,6 +133,14 @@
       "category": "witchcraft"
     },
     {
+      "name": "feature-toggle",
+      "source": "./feature-toggle",
+      "description": "Simple feature flags backed by Cherry's Refreshable configuration with Apollo propagation and Scientist gate integration",
+      "version": "1.0.0",
+      "keywords": ["feature-flag", "feature-toggle", "refreshable", "rollout"],
+      "category": "resilience"
+    },
+    {
       "name": "forge-pipeline",
       "source": "./forge-pipeline",
       "description": "Workflow for packaging, containerizing, and publishing Python services using Forge tools",
@@ -283,6 +291,14 @@
       "version": "1.0.0",
       "keywords": ["rune", "validation", "serialization", "constraints"],
       "category": "witchcraft"
+    },
+    {
+      "name": "scientist",
+      "source": "./scientist",
+      "description": "Safe refactoring through controlled experiments — run old and new code paths in parallel with py-scientist",
+      "version": "1.0.0",
+      "keywords": ["scientist", "experiment", "safe-refactoring", "dual-path"],
+      "category": "resilience"
     },
     {
       "name": "semantic-version",

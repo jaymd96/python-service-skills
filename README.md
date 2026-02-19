@@ -1,6 +1,6 @@
 # python-service-skills
 
-A Claude Code plugin providing 46 Python ecosystem skills for service development — covering the Witchcraft stack, data libraries, HTTP, observability, CLI tooling, resilience, and more.
+A Claude Code plugin providing 48 Python ecosystem skills for service development — covering the Witchcraft stack, data libraries, HTTP, observability, CLI tooling, resilience, and more.
 
 ## Usage
 
@@ -87,6 +87,8 @@ Each skill provides a `SKILL.md` with quick-start patterns and a `references/` d
 
 | Skill | Description |
 |-------|-------------|
+| [scientist](./scientist) | Safe refactoring through controlled experiments with py-scientist |
+| [feature-toggle](./feature-toggle) | Simple feature flags via Cherry's Refreshable config with Scientist gates |
 | [tenacity](./tenacity) | Composable retry logic with backoff |
 | [dynaconf](./dynaconf) | Layered configuration management |
 
@@ -142,7 +144,7 @@ Each skill provides a `SKILL.md` with quick-start patterns and a `references/` d
 ```
 python-service-skills/
 ├── .claude-plugin/
-│   └── marketplace.json    # Plugin manifest (46 skills)
+│   └── marketplace.json    # Plugin manifest (48 skills)
 ├── attrs/
 │   ├── SKILL.md            # Quick-start patterns and trigger keywords
 │   └── references/
@@ -152,7 +154,7 @@ python-service-skills/
 │   ├── SKILL.md
 │   └── references/
 │       └── ...
-└── ... (46 skill directories)
+└── ... (48 skill directories)
 ```
 
 ## License

@@ -10,7 +10,8 @@
 - [Plan](#plan)
 - [PlanType & PlanState](#plantype--planstate)
 - [Constraints](#constraints)
-- [RBAC](#rbac)
+- [V3 Auth System](#v3-auth-system)
+- [Compass & RIDs](#compass--rids)
 
 ## Product
 
@@ -134,8 +135,8 @@ entity = Entity(
 ## EntityState FSM
 
 ```
-UNMANAGED → PENDING → INSTALLING → RUNNING ↔ DEGRADED
-                                       ↘ FAILED
+UNMANAGED -> PENDING -> INSTALLING -> RUNNING <-> DEGRADED
+                                          \-> FAILED
 ```
 
 ### State transitions
@@ -190,70 +191,214 @@ plan = Plan(
 
 | Value | Description |
 |-------|-------------|
-| `pending` | Awaiting approval/execution |
+| `proposed` | Awaiting constraint evaluation |
 | `blocked` | Constraints not satisfied |
+| `issued` | Approved, ready for execution |
 | `executing` | Currently running |
 | `succeeded` | Completed successfully |
 | `failed` | Execution failed |
 | `rolled_back` | Rolled back after failure |
 
-`PlanStateMachine` manages plan lifecycle transitions.
+`PlanStateMachine` manages plan lifecycle transitions: `PROPOSED -> BLOCKED -> ISSUED -> EXECUTING -> SUCCEEDED/FAILED/ROLLED_BACK`.
 
 ## Constraints
 
-Constraints are preconditions evaluated before plan execution.
-
-### MaintenanceWindowConstraint
+Constraints are preconditions evaluated before plan execution. All constraints implement a uniform interface:
 
 ```python
-from apollo.models import MaintenanceWindowConstraint
-
-constraint = MaintenanceWindowConstraint(
-    cron_expression="0 2 * * 6",  # Saturdays at 2 AM
-    duration_hours=4,
+from apollo.orchestration import (
+    Constraint, ConstraintResult, ConstraintType, ConstraintSeverity,
 )
+
+# Base constraint: evaluate(context: dict[str, Any]) -> ConstraintResult
+# See orchestration.md for full constraint system documentation
 ```
 
-### DependencyConstraint
-
-Validates that service dependencies are healthy before proceeding.
-
-### SuppressionConstraint
-
-Blocks changes during configured suppression periods (e.g., holiday freezes).
-
-## RBAC
-
-Casbin-based authorization with hierarchical roles.
-
-```python
-from apollo.auth import Enforcer, Team, Role, Permission, ResourceType
-```
-
-### Role hierarchy
-
-```
-admin → editor → operator → viewer
-```
-
-### ResourceType
+### ConstraintType (8 types)
 
 | Value | Description |
 |-------|-------------|
-| `environment` | Deployment environment |
-| `product` | Product definition |
-| `channel` | Release channel |
-| `entity` | Deployed entity |
-| `label` | Label-based access |
+| `maintenance_window` | Time-window based deployment gates |
+| `dependency` | Service dependency health/version checks |
+| `suppression_window` | One-time deployment freezes |
+| `approval` | Approval workflow gates |
+| `health` | Prometheus-based health metric checks |
+| `rate_limiting` | Deployment frequency limits |
+| `version` | Version compatibility checks |
+| `custom` | User-defined constraints |
 
-### Semantic roles
+### ConstraintSeverity
 
-| Role | Scope |
-|------|-------|
-| `ProductRole` | Per-product permissions |
-| `ChannelRole` | Per-channel permissions |
-| `EnvironmentRole` | Per-environment permissions |
-| `LabelRole` | Label-based permissions |
+| Value | Description |
+|-------|-------------|
+| `blocking` | Plan cannot proceed |
+| `warning` | Plan can proceed with acknowledgment |
+| `info` | Informational only |
+
+### ConstraintResult
+
+```python
+@dataclass
+class ConstraintResult:
+    satisfied: bool
+    constraint_type: ConstraintType
+    rule_expression: str
+    context_data: dict[str, Any]
+    message: str
+    severity: ConstraintSeverity = ConstraintSeverity.BLOCKING
+    evaluated_at: datetime  # UTC
+    metadata: dict[str, Any] = field(default_factory=dict)
+    reevaluate_at: datetime | None = None  # Used by ReevaluationScheduler
+```
+
+## V3 Auth System
+
+The V3 auth redesign makes **Project** (not Team) the Casbin security domain. The auth module exports ~65 public symbols.
+
+### 6-tuple permission model
+
+```
+(user_id, org_rid, project_id, resource_type, resource_id, action)
+```
+
+### Core imports
+
+```python
+from apollo.auth import (
+    # Enforcer & factory
+    ApolloEnforcer, create_enforcer, get_enforcer, clear_enforcer_cache,
+    RBACStorageType,
+
+    # Decorators (replace old @require_permission / @require_role)
+    require_operation,           # e.g., @require_operation("catalog:read-product")
+    require_resource_operation,  # V4: resolves project via Compass, then checks
+    require_global_role,         # Non-project-scoped role checks
+
+    # Authorization pipeline
+    AuthorizationPipeline, AuthorizationRequest, AuthorizationResult,
+
+    # Operations registry
+    OperationRegistry, SEED_OPERATIONS,  # 70+ pre-defined operations
+
+    # Auth service & chain
+    AuthService, AuthChain, AuthMode, create_auth_service,
+
+    # RBAC helpers
+    can_view, can_edit, can_delete, can_admin, can_execute,
+    create_project_with_admin, add_project_member, remove_project_member,
+    DEFAULT_ORG_RID,
+)
+```
+
+### ApolloEnforcer
+
+Casbin wrapper with project-scoped RBAC:
+
+```python
+enforcer = create_enforcer(database_url="sqlite:///apollo.db")
+
+# Core permission check
+allowed = enforcer.check_permission(
+    user_id="ri.auth.main.user.1234",
+    org_rid="ri.auth.main.org.5678",
+    project_id="project-456",
+    resource_type="product",
+    resource_id="com.example:my-service",
+    action="write",
+)
+
+# With explanation (returns tuple[bool, list[str]])
+allowed, reasons = enforcer.check_permission_with_explanation(...)
+
+# Batch check
+results = enforcer.batch_check_permissions([
+    (user, org, project, "product", "*", "read"),
+    (user, org, project, "entity", "entity-1", "write"),
+])
+
+# Role management (project-scoped)
+enforcer.assign_role(user_id, "editor", project_id)
+enforcer.get_user_roles(user_id, project_id)  # -> ["editor"]
+enforcer.get_user_projects(user_id)  # -> ["project-456", ...]
+```
+
+### Authorization Pipeline (5 layers)
+
+Evaluation order — short-circuits on first denial (except MFA):
+
+| Layer | Name | Purpose |
+|-------|------|---------|
+| 1 | Cross-Org | Cross-organization trust evaluation |
+| 2 | RBAC | Casbin permission check (project-scoped) |
+| 3 | MAC | Mandatory access control (security markings) |
+| 4 | MFA | Step-up authentication requirements |
+| 5 | ABAC | Attribute-based access control (granular policies) |
+
+```python
+from apollo.auth import AuthorizationPipeline, AuthorizationRequest, AuthorizationResult
+
+pipeline = AuthorizationPipeline(
+    enforcer=enforcer,
+    enable_cross_org=True,
+    enable_mfa_rules=True,
+)
+
+request = AuthorizationRequest(
+    user_id="ri.auth.main.user.1234",
+    org_rid="ri.auth.main.org.5678",
+    project_id="project-456",
+    resource_type="product",
+    resource_id="com.example:my-service",
+    action="write",
+    mfa_verified=True,
+)
+
+result = pipeline.evaluate(request)
+# result.allowed: bool
+# result.denied_by: str | None  ("cross_org", "rbac", "markings", "mfa", "granular")
+# result.requires_mfa: bool
+```
+
+### Operations Registry
+
+Data-driven, database-backed operations following `service:action-resource` convention:
+
+```python
+from apollo.auth import OperationRegistry, SEED_OPERATIONS
+
+registry = OperationRegistry(session=db_session)
+registry.seed(SEED_OPERATIONS)  # Seeds 70+ operations
+
+# Examples of seed operations:
+# ("catalog", "read-product", "View product details and releases", False)
+# ("catalog", "delete-product", "Delete products", True)  # requires MFA
+# ("orchestration", "execute-plan", "Execute deployment plans", False)
+
+op = registry.get_by_qualified_name("catalog:read-product")
+ops = registry.list_by_service("catalog")
+```
+
+### Decorators
+
+```python
+from apollo.auth import require_operation, require_resource_operation, require_global_role
+
+# Operation-based (project-scoped)
+@require_operation("catalog:read-product")
+async def list_products(request): ...
+
+# Resource-aware (resolves project via Compass)
+@require_resource_operation(
+    "catalog:write-product",
+    resource_type="product",
+    resource_param="product_id",
+)
+async def update_product(request, product_id: str): ...
+
+# Global role (non-project-scoped)
+@require_global_role("global_admin")
+async def admin_operation(request): ...
+```
 
 ### Authentication features
 
@@ -267,16 +412,51 @@ admin → editor → operator → viewer
 | HSM integration | Hardware security modules |
 | Vault integration | Encryption key management |
 | Service accounts | Machine-to-machine auth |
-| Compliance logging | FedRAMP/SOC2 audit trails |
+| Break-glass bypass | Emergency super-admin via `APOLLO_BREAKGLASS_USERS` env var |
+| Compliance logging | FedRAMP/SOC2 audit trails with structured `ChangeWindowAuditEntry` |
 
-### FastAPI decorators
+## Compass & RIDs
+
+### Resource Identifiers (RIDs)
+
+Palantir-style typed identifiers: `ri.<service>.<instance>.<type>.<locator>`
 
 ```python
-from apollo.auth import require_permission, require_role
+from apollo.rid import ResourceIdentifier, generate_user_rid, generate_product_rid
 
-@require_permission("product:write")
-async def create_product(request): ...
+# Generate typed RIDs
+user_rid = generate_user_rid()      # -> "ri.auth.main.user.<uuid4>"
+product_rid = generate_product_rid() # -> "ri.catalog.main.product.<uuid4>"
 
-@require_role("admin")
-async def delete_environment(request): ...
+# Parse existing RIDs
+rid = ResourceIdentifier.parse("ri.auth.main.user.abc123")
+rid.service   # "auth"
+rid.instance  # "main"
+rid.type      # "user"
+rid.locator   # "abc123"
+```
+
+18 typed aliases (compile-time safe via `NewType`):
+`OrgRid`, `UserRid`, `GroupRid`, `TeamRid`, `SpaceRid`, `ProjectRid`, `FolderRid`, `ProductRid`, `ReleaseRid`, `EnvironmentRid`, `EntityRid`, `ChannelRid`, `PlanRid`, `ModuleRid`, `OperationRid`, `AuditEventRid`, `ServiceAccountRid`, `ApiKeyRid`
+
+### Compass Resource Namespace
+
+Unified registry providing RID paths, project ownership, and hierarchy traversal:
+
+```
+Organisation -> Space (governance) -> Project (security boundary) -> Folder -> Resource
+```
+
+```python
+from apollo.compass import CompassService, CompassMode, create_compass_service
+
+compass = create_compass_service(session=db_session, mode=CompassMode.LOCAL)
+
+# Register resources in the hierarchy
+compass.create_space(org_rid, name="Platform", slug="platform")
+compass.create_project(space_rid, name="My Service", slug="my-service")
+compass.register_resource(project_rid, resource_rid, "My Product", "product")
+
+# Resolve project ownership (O(1) lookup — critical for V4 auth)
+project = compass.resolve_project(resource_rid)
 ```

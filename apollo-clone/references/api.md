@@ -68,6 +68,17 @@ catalog.create_release_channel(channel: ReleaseChannel) -> ReleaseChannel
 catalog.list_release_channels() -> list[ReleaseChannel]
 ```
 
+### Catalog support services
+
+| Component | Description |
+|-----------|-------------|
+| `DependencyGraph` | Product dependency resolution |
+| `ProductResolver` | Dependency resolution with cycle detection |
+| `ReleasePromotionWorkflow` | Promotion pipeline execution |
+| `ModuleRegistry` | Module registration and lookup |
+| `ReleaseNotesGenerator` | Automated release notes |
+| `ExportService` / `ImportService` | Data import/export |
+
 ## OrchestrationEngine
 
 Central engine that evaluates entities and proposes deployment plans.
@@ -93,14 +104,60 @@ engine = OrchestrationEngine(catalog=catalog, plan_storage=storage)
 ```python
 from apollo.orchestration import (
     Constraint, ConstraintResult, ConstraintEvaluator,
-    MaintenanceWindowConstraint,
-    DependencyConstraint,
-    SuppressionWindowConstraint,
+    MaintenanceWindowConstraint, MaintenanceWindow,
+    DependencyConstraint, DependencyRequirement,
+    SuppressionWindowConstraint, SuppressionWindow,
+    QuorumConstraint, NetworkPolicyConstraint,
+    HealthConstraint, RateLimitConstraint,
+    ConstraintType, ConstraintSeverity,
 )
 
+# All constraints use uniform interface:
+# constraint.evaluate(context: dict[str, Any]) -> ConstraintResult
+
 evaluator = ConstraintEvaluator()
-result = evaluator.evaluate(plan, constraints)
-# result.satisfied: bool, result.violations: list[str]
+result = evaluator.evaluate(context, constraints)
+```
+
+### ConstraintResult
+
+```python
+@dataclass
+class ConstraintResult:
+    satisfied: bool
+    constraint_type: ConstraintType       # 8 types: MAINTENANCE_WINDOW, DEPENDENCY, etc.
+    rule_expression: str                  # The rule-engine expression evaluated
+    context_data: dict[str, Any]          # Data dict used for evaluation
+    message: str                          # Human-readable explanation
+    severity: ConstraintSeverity          # BLOCKING, WARNING, INFO
+    evaluated_at: datetime                # UTC
+    metadata: dict[str, Any]
+    reevaluate_at: datetime | None        # For ReevaluationScheduler
+```
+
+### Orchestration exports
+
+```python
+from apollo.orchestration import (
+    # Engine
+    OrchestrationEngine, EvaluationResult, ExecutionMode,
+
+    # Constraints (8 built-in types)
+    MaintenanceWindowConstraint, DependencyConstraint,
+    SuppressionWindowConstraint, QuorumConstraint,
+    NetworkPolicyConstraint, HealthConstraint, RateLimitConstraint,
+
+    # Override system
+    OverrideService, OverridePermissionChecker,
+    EmergencyOverrideRequest, EmergencyOverrideStatus,
+    ChangeWindow, ChangeWindowAuditEntry,
+
+    # Analytics
+    PlanAnalytics, PlanMetrics, PeriodType, TrendDirection,
+
+    # CRD execution
+    CRDExecutor,
+)
 ```
 
 ### Plan storage backends
@@ -121,13 +178,16 @@ from apollo.orchestration import (
 | `ApprovalGate` | Gate requiring specific approvals before execution |
 | `ReevaluationScheduler` | Periodic re-evaluation of entity state |
 | `RecurringScheduleService` | Cron-based maintenance window scheduling |
+| `OverrideService` | Emergency override lifecycle management |
+| `PlanAnalytics` | Plan metrics aggregation and trend analysis |
+| `CRDExecutor` | Kubernetes CRD-based plan execution |
 
 ## SpokeAgent
 
 Agent for spoke-side (cluster-level) operations. Communicates with Hub via HTTP polling or WebSocket.
 
 ```python
-from apollo.spoke.agent import SpokeAgent, SpokeAgentConfig
+from apollo.spoke import SpokeAgent, SpokeAgentConfig
 
 config = SpokeAgentConfig(
     hub_url="https://hub.example.com",
@@ -138,6 +198,16 @@ config = SpokeAgentConfig(
 agent = SpokeAgent(config)
 agent.start()
 ```
+
+### Spoke components
+
+| Component | Description |
+|---------|-------------|
+| `SpokeAgent` / `SpokeAgentConfig` | Agent orchestrator and configuration |
+| `HelmChartOperator` / `HelmPlanExecutor` | Helm-based plan execution |
+| `NodeLifecycleController` | Node termination policies and lifecycle |
+| `ApolloAuthBroker` | Authentication mediation for spoke-side services |
+| `ExpectedStateK8s` | Reports actual K8s state back to Hub |
 
 ### Node status
 
@@ -161,7 +231,7 @@ from apollo.spoke.agent import NodeStatus
 
 ## Events
 
-Blinker-based pub/sub event system.
+Blinker-based pub/sub event system with 20+ signals.
 
 ```python
 from apollo.events import (
@@ -180,6 +250,8 @@ from apollo.events import (
     release_promoted,
     # System
     system_startup, system_shutdown, config_reloaded,
+    # Handler management
+    init_handlers, register_handler, unregister_handler,
 )
 
 @plan_failed.connect
@@ -191,17 +263,89 @@ def on_state_change(sender, entity_id, old_state, new_state, **kwargs):
     log.info(f"Entity {entity_id}: {old_state} -> {new_state}")
 ```
 
+### Event handler subsystem
+
+| Component | Description |
+|-----------|-------------|
+| `handlers/notifications.py` | Notification facade |
+| `handlers/_transports.py` | Transport adapters (Slack, email, etc.) |
+| `handlers/_signal_handlers.py` | Signal-to-handler wiring |
+| `handlers/_digest.py` | Digest/batched notifications |
+| `handlers/_preferences.py` | Per-user notification preferences |
+
 ## FastAPI Application
 
 ```python
-from apollo.api.app import create_app
+from apollo.api import create_app
 
 app = create_app()  # Returns FastAPI instance
 ```
 
-### Route modules (33 routers)
+### API exports
 
-Agents, auth, auth_mfa, auth_oidc, changes, channels, config_versions, dependencies, deployments, drift, entities, environments, maintenance, modules, pipelines, plans, products, releases, registries, teams, vulnerabilities, notifications, preferences, analytics, audit, api_keys, hub.
+```python
+from apollo.api import (
+    create_app,
+    # Errors
+    APIError, BadRequestError, ConflictError, NotFoundError,
+    UnauthorizedError, PolicyViolationError, ValidationError,
+    # Dependency injection
+    get_db, get_catalog, get_enforcer, get_current_user,
+    set_db_engine, set_catalog, set_enforcer,
+    # Common classes
+    CurrentUser, PaginationParams,
+)
+```
+
+### Route organization (50+ routes across 27 routers)
+
+**Core domain routes:**
+- `products_router` — `/products`
+- `releases_router` — `/releases` (includes auth, canary, promotion, demotion, approval)
+- `environments_router` — `/environments` (includes config, CRUD, heartbeat, maintenance, manifests, metrics)
+- `entities_router` — `/entities`
+- `plans_router` — `/plans`
+- `channels_router` — `/channels`
+- `agents_router` — `/agents`
+- `pipelines_router` — `/pipelines`
+- `modules_router` — `/modules`
+
+**Data & operations routes:**
+- `changes_router`, `maintenance_router`, `api_keys_router`, `deployments_router`
+- `notifications_router`, `preferences_router`, `analytics_router`, `registries_router`
+- `drift_router`, `audit_router`, `config_versions_router`, `dependencies_router`
+- `vulnerabilities_router`
+
+**Organizational routes:**
+- `groups_router` — `/groups`
+- `teams_router` — `/teams`
+- `projects_router` — `/projects`
+- `spaces_router` — `/spaces`
+- `hub_router` — `/hub`
+
+**Auth routes (combined router):**
+- `auth_combined_router` — `/auth` (auth + MFA + OIDC)
+
+**Admin routes:**
+- `admin_router` — `/admin` (attributes, IDP, markings, operations, policies, rules, trust)
+
+**Protocol routes:**
+- `protocol_router` — `/protocol` (identity, authorization, compass)
+
+### Route subdirectories
+
+| Directory | Modules | Purpose |
+|-----------|---------|---------|
+| `routes/` | 26 top-level modules | Core domain endpoints |
+| `routes/admin/` | 8 modules | Admin management (IDP, markings, operations, policies, rules, trust) |
+| `routes/auth/` | 3 modules | Authentication (auth, MFA, OIDC) |
+| `routes/environments/` | 7 modules | Environment management (config, CRUD, heartbeat, maintenance, manifests, metrics) |
+| `routes/protocol/` | 3 modules | Protocol endpoints (identity, authorization, compass) |
+| `routes/releases/` | 7 modules | Release management (approval, auth, canary, CRUD, demotion, promotion) |
+
+### API schemas (13 schema modules)
+
+Located in `apollo/api/schemas/`: agents, changes, channels, common, deployments, entities, environments, maintenance, modules, plans, products, releases.
 
 ### Key endpoints
 
@@ -216,10 +360,43 @@ Agents, auth, auth_mfa, auth_oidc, changes, channels, config_versions, dependenc
 | POST | `/api/v1/plans` | Create plan |
 | POST | `/api/v1/plans/{id}/approve` | Approve plan |
 | GET | `/api/v1/environments` | List environments |
+| POST | `/admin/operations` | Manage operations registry |
+| GET | `/protocol/compass/{rid}` | Compass resource lookup |
+| POST | `/auth/mfa/verify` | MFA verification |
+
+### Exception hierarchy
+
+```python
+APIError(status_code, message, details)  # Base
+├── BadRequestError        # 400
+├── UnauthorizedError      # 401
+├── PolicyViolationError   # 403
+├── NotFoundError          # 404
+├── ConflictError          # 409
+└── ValidationError        # 422
+```
+
+### Dependency injection (`_deps.py`)
+
+| Function | Returns |
+|----------|---------|
+| `get_db()` | SQLModel session |
+| `get_db_session()` | Async session |
+| `get_catalog()` | `ProductCatalog` |
+| `get_enforcer()` | `ApolloEnforcer` |
+| `get_current_user()` | `CurrentUser` (from Bearer token or X-API-Key) |
+| `get_channel_manager()` | `ChannelManager` |
+| `get_auth_chain()` | `AuthChain` |
+| `get_auth_service()` | `AuthService` |
+| `get_module_registry()` | `ModuleRegistry` |
+| `get_compass_service()` | `CompassService` |
+| `get_dependency_graph()` | `DependencyGraph` |
+| `get_audit_service()` | `AuditService` |
+| `get_health_collector()` | `HealthCollector` |
 
 ## CLI
 
-Click + Rich CLI with extensive subcommands.
+Click + Rich CLI with extensive subcommands and audit logging.
 
 ```python
 from apollo.cli.main import cli, ApolloContext
@@ -234,4 +411,9 @@ from apollo.cli.main import cli, ApolloContext
 
 `agent`, `analytics`, `auth`, `change`, `channel`, `config_version`, `configure`, `dependency`, `deployment`, `drift`, `entity`, `environment`, `helm`, `maintenance`, `module`, `notification`, `pipeline`, `plan`, `preference`, `product`, `publish`, `registry`, `release`, `spec`, `spoke`, `team`, `vulnerability`
 
-Features: audit logging middleware (FedRAMP/SOC2), offline mode with command queuing, multiple output formats.
+### Features
+
+- Audit logging middleware (FedRAMP/SOC2) with `CLIAuditLogger`
+- Offline mode with command queuing
+- Multiple output formats (table, json, yaml)
+- `HubAPIClient` for all server communication (fully decoupled from server)

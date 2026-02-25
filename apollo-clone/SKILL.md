@@ -1,6 +1,6 @@
 ---
 name: apollo-clone
-description: Continuous delivery platform on k3s. Use when working with Product Catalog, Entity lifecycle (6-state FSM), OrchestrationEngine with constraint evaluation, SpokeAgent deployment, RBAC with Casbin, release management, Helm chart deployment, or the Apollo CLI. Triggers on apollo, CD platform, product catalog, entity management, orchestration engine, deployment, spoke agent, RBAC, release channel.
+description: Continuous delivery platform on k3s. Use when working with Product Catalog, Entity lifecycle (6-state FSM), OrchestrationEngine with constraint evaluation, SpokeAgent deployment, V3 auth (5-layer pipeline, Casbin RBAC, 18 RID types, operations registry), Compass resource namespace, release management, Helm chart deployment, or the Apollo CLI. Triggers on apollo, CD platform, product catalog, entity management, orchestration engine, deployment, spoke agent, RBAC, release channel, constraint evaluation, RID, compass, auth pipeline.
 ---
 
 # Apollo-clone — CD Platform (v0.1.0)
@@ -29,25 +29,34 @@ UNMANAGED -> PENDING -> INSTALLING -> RUNNING <-> DEGRADED
 
 ### Module architecture
 ```python
-# 11 core modules
-apollo.models          # Data models with transitions FSM
-apollo.catalog         # SQLModel persistence
-apollo.orchestration   # Constraint evaluation engine
-apollo.agent / spoke   # Deployment agent (Burr workflows)
-apollo.auth            # RBAC with Casbin
-apollo.events          # Blinker-based pub/sub
-apollo.scheduling      # Cron maintenance windows
-apollo.config          # Dynaconf configuration
-apollo.services        # Version resolution, health
-apollo.api             # FastAPI REST endpoints
-apollo.cli             # Click + Rich CLI
+# 20 core modules
+apollo.models          # Domain models with transitions FSM (76+ exports)
+apollo.catalog         # SQLModel persistence + module registry + dependency graph
+apollo.orchestration   # Constraint evaluation engine + analytics + overrides (40 exports)
+apollo.spoke           # Deployment agents — Helm, node lifecycle, auth broker, state reporter
+apollo.auth            # V3 auth — 5-layer pipeline, Casbin RBAC, 18 RID types, operations registry
+apollo.rid             # Typed resource identifiers (18 RID types, ri.service.instance.type.locator)
+apollo.compass         # Resource namespace — RID paths, project ownership, Compass hierarchy
+apollo.events          # Blinker-based pub/sub (20+ signals)
+apollo.services        # Version resolution, health, drift, rollback, config versioning (27 exports)
+apollo.api             # FastAPI REST endpoints (50+ routes across 27 routers)
+apollo.cli             # Click + Rich CLI with audit logging
+apollo.config          # Dynaconf configuration management
+apollo.scheduling      # Cron maintenance windows + suppression windows
+apollo.db              # Alembic migrations (0001-0015)
+apollo.spec            # Product specification — manifests, traits, secrets, substitution engine (63 exports)
+apollo.helm            # Helm release management — client, values builder, async interface
+apollo.client          # Hub API client — async HTTP with retry, pooling, auth
+apollo.registry        # OCI artifact registry — ECR, GCR, ACR authenticators
+apollo.webhook         # K8s mutating admission webhook — registry rewriting, pull secret injection
+apollo.security        # Vulnerability scanning — Trivy, ClamAV, auto-recall engine
 ```
 
 ## References
 
-- **[api.md](references/api.md)** — Product, Release, Entity, ProductCatalog, OrchestrationEngine, SpokeAgent
-- **[models.md](references/models.md)** — Data models, EntityState FSM, PlanType, constraints, RBAC
-- **[orchestration.md](references/orchestration.md)** — Engine, Plans, constraints, CRD/Agent execution, scheduling
+- **[api.md](references/api.md)** — Product, Release, Entity, ProductCatalog, OrchestrationEngine, SpokeAgent, FastAPI routes
+- **[models.md](references/models.md)** — Data models, EntityState FSM, PlanType, constraints, V3 auth system
+- **[orchestration.md](references/orchestration.md)** — Engine, Plans, constraints, overrides, analytics, CRD/Agent execution
 - **[examples.md](references/examples.md)** — Complete workflows, CLI reference, integration patterns, gotchas
 
 ## Grep Patterns
@@ -56,3 +65,12 @@ apollo.cli             # Click + Rich CLI
 - `EntityState|EntityHealth` — Find entity lifecycle
 - `OrchestrationEngine|PlanType` — Find orchestration
 - `SpokeAgent|apollo\.spoke` — Find agent framework
+- `ApolloEnforcer|create_enforcer|require_operation` — Find V3 auth
+- `AuthorizationPipeline|AuthorizationRequest` — Find auth pipeline
+- `OperationRegistry|SEED_OPERATIONS` — Find operations registry
+- `ResourceIdentifier|generate_.*_rid` — Find RID operations
+- `CompassClient|CompassService|resolve_project` — Find Compass namespace
+- `ConstraintResult|ConstraintType|ConstraintSeverity` — Find constraint system
+- `QuorumConstraint|NetworkPolicyConstraint` — Find advanced constraints
+- `OverrideService|EmergencyOverrideRequest` — Find override system
+- `PlanAnalytics|PlanMetrics` — Find plan analytics
